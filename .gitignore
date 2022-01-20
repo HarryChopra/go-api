@@ -19,7 +19,7 @@ builds/**/images/*
 
 # dotenv environment variable files
 ###################################
-*.env
+#*.env
 
 # Dependency directories
 ########################
