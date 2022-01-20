@@ -1,21 +1,33 @@
 package main
 
 import (
+	"database/sql"
 	"log"
-	"os"
-	"os/signal"
-	"syscall"
+
+	_ "github.com/lib/pq"
+
+	"github.com/harrychopra/go-api/api"
+	db "github.com/harrychopra/go-api/db/models"
 )
 
 var build = "develop"
 
+const (
+	dbDriverName  = "postgres"
+	dbSource      = "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable"
+	serverAddress = "0.0.0.0:8080"
+)
+
 func main() {
-	log.Println("starting service", build)
-	defer log.Println("service ended")
+	conn, err := sql.Open(dbDriverName, dbSource)
+	if err != nil {
+		log.Fatal("failed to connect to db: ", err)
+	}
 
-	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, syscall.SIGINT)
-	<-shutdown
+	store := db.NewStore(conn)
+	server := api.NewServer(store)
 
-	log.Println("stopping service")
+	if err := server.Start(serverAddress); err != nil {
+		log.Fatal("failed to start server: ", err)
+	}
 }
