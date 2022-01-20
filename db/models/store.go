@@ -38,11 +38,11 @@ func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
 	return tx.Commit()
 }
 
-// Input for Transfer transaction
+// Input for transfer transaction
 type TransferTxParams struct {
-	FromAccountID int64
-	ToAccountID   int64
-	Amount        int64
+	FromAccountID int64 `json:"from_account_id"`
+	ToAccountID   int64 `json:"to_account_id"`
+	Amount        int64 `json:"amount"`
 }
 
 // TransferTxResult struct contains result of each operation in the transaction
@@ -83,7 +83,7 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 		}
 
 		// d. & e. Account Balance update
-		// Before concurrent row "updates", Order each row operation by ID to prevent deadlock
+		// Before concurrent row updates, Order each row operation by ID to prevent deadlock
 		if arg.FromAccountID < arg.ToAccountID {
 			result.FromAccount, result.ToAccount, err = updateBalance(
 				ctx, q, arg.FromAccountID, -arg.Amount, arg.ToAccountID, arg.Amount)
@@ -94,12 +94,12 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 		if err != nil {
 			return err
 		}
-
 		return nil
 	})
 	return result, err
 }
 
+// updateBalance performs the adjustment of balance amount for two accounts
 func updateBalance(ctx context.Context, q *Queries, accountID1, amount1, accountID2, amount2 int64) (
 	account1, account2 Account, err error) {
 	if account1, err = q.UpdateAccountBalance(ctx, UpdateAccountBalanceParams{
