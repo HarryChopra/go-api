@@ -6,21 +6,23 @@ import (
 	"os"
 	"testing"
 
+	"github.com/harrychopra/go-api/util"
 	_ "github.com/lib/pq"
 )
 
 var (
-	dbDriverName = "postgres"
-	dbSource     = "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable"
-	testQueries  *Queries
-	testDB       *sql.DB
-	testStore    *Store
+	testQueries *Queries
+	testDB      *sql.DB
+	testStore   *Store
 )
 
 // TestMain performs setup and tear down for the tests
 func TestMain(m *testing.M) {
-	var err error
-	if testDB, err = sql.Open(dbDriverName, dbSource); err != nil {
+	config, err := util.LoadConfig("../..")
+	if err != nil {
+		log.Fatal("failed to load config: ", err)
+	}
+	if testDB, err = sql.Open(config.DBDriver, config.DBSource); err != nil {
 		log.Fatal("failed to connect to db: ", err)
 	}
 	testQueries = New(testDB)

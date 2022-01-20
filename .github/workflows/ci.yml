@@ -2,8 +2,6 @@ name: ci-test
 
 # What triggers?
 on:
-  push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
 
