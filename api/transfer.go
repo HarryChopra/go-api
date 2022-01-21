@@ -22,7 +22,6 @@ func (server *Server) CreateTransfer(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errResponse(err))
 		return
 	}
-	// Should move to the models. Handler to ony check that the currencies are the same
 	if !server.validAccount(ctx, req.FromAccountID, req.Currency) ||
 		!server.validAccount(ctx, req.ToAccountID, req.Currency) {
 		return
@@ -40,7 +39,7 @@ func (server *Server) CreateTransfer(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, result)
 }
 
-// validAccount confirms if an account exists and that it's currency matches the input currency
+// validAccount confirms if the input account (id) exists and has a matching input currency
 func (server *Server) validAccount(ctx *gin.Context, accountID int64, currency string) bool {
 	account, err := server.store.GetAccount(ctx, accountID)
 	if err != nil {

@@ -43,6 +43,7 @@ func (q *Queries) DeleteEntry(ctx context.Context, id int64) error {
 const getEntry = `-- name: GetEntry :one
 SELECT id, account_id, amount, created_at FROM entries
 WHERE id = $1
+LIMIT 1
 `
 
 func (q *Queries) GetEntry(ctx context.Context, id int64) (Entry, error) {

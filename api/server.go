@@ -29,6 +29,7 @@ func NewServer(store db.Store) *Server {
 	return server
 }
 
+// Start starts an HTTP Server and listens on the input "address:port"
 func (server *Server) Start(address string) error {
 	return server.router.Run(address)
 }

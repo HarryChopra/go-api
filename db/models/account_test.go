@@ -11,12 +11,16 @@ import (
 )
 
 func createRandomAccount(t *testing.T, arg *CreateAccountParams) Account {
+	user := createRandomUser(t, nil)
 	if arg == nil {
 		arg = &CreateAccountParams{
-			Owner:    util.RandomName(),
+			Owner:    user.Username,
 			Balance:  util.RandomMoney(),
 			Currency: util.RandomCurrency(),
 		}
+	}
+	if arg.Owner == "" {
+		arg.Owner = user.Username
 	}
 	account, err := testQueries.CreateAccount(context.Background(), *arg)
 	require.NoError(t, err)
@@ -25,7 +29,6 @@ func createRandomAccount(t *testing.T, arg *CreateAccountParams) Account {
 
 func TestCreateAccount(t *testing.T) {
 	arg := &CreateAccountParams{
-		Owner:    util.RandomName(),
 		Balance:  util.RandomMoney(),
 		Currency: util.RandomCurrency(),
 	}
@@ -51,29 +54,57 @@ func TestGetAccount(t *testing.T) {
 }
 
 func TestListAccounts(t *testing.T) {
-	arg1 := CreateAccountParams{
-		Owner:    "TestTest",
-		Balance:  0,
-		Currency: "GBP",
+	arg1 := &CreateUserParams{
+		Username:       util.RandomName(),
+		HashedPassword: "secret",
+		FullName:       util.RandomName(),
+		Email:          util.RandomEmail(),
 	}
-	for i := 0; i < 15; i++ {
-		arg1.Balance++
-		createRandomAccount(t, &arg1)
+	user := createRandomUser(t, arg1)
+	accountParams := []CreateAccountParams{
+		{
+			Owner:    user.Username,
+			Balance:  1,
+			Currency: "USD",
+		},
+		{
+			Owner:    user.Username,
+			Balance:  2,
+			Currency: "CAD",
+		},
+		{
+			Owner:    user.Username,
+			Balance:  3,
+			Currency: "GBP",
+		},
+		{
+			Owner:    user.Username,
+			Balance:  4,
+			Currency: "EUR",
+		},
+		{
+			Owner:    user.Username,
+			Balance:  5,
+			Currency: "AUD",
+		},
+	}
+	for _, param := range accountParams {
+		createRandomAccount(t, &param)
 	}
 	arg2 := ListAccountsParams{
-		Owner:  arg1.Owner,
-		Limit:  10,
-		Offset: 5,
+		Owner:  user.Username,
+		Limit:  2,
+		Offset: 2,
 	}
 	accounts, err := testQueries.ListAccounts(context.Background(), arg2)
 	require.NoError(t, err)
 	require.NotEmpty(t, accounts)
-	require.Len(t, accounts, 10)
+	require.Len(t, accounts, 2)
 	for _, account := range accounts {
 		require.NotEmpty(t, account)
 		require.Equal(t, arg2.Owner, account.Owner)
 	}
-	require.Equal(t, int64(10), accounts[4].Balance)
+	require.Equal(t, int64(4), accounts[1].Balance)
 }
 
 func TestUpdateAccount(t *testing.T) {
