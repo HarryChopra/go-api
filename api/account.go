@@ -10,7 +10,7 @@ import (
 
 type createAccountRequest struct {
 	Owner    string `json:"owner" binding:"required"`
-	Currency string `json:"currency" binding:"required,oneof=USD CAD GBP EUR AUD"`
+	Currency string `json:"currency" binding:"required,currency"`
 }
 
 func (server *Server) CreateAccount(ctx *gin.Context) {
@@ -19,19 +19,16 @@ func (server *Server) CreateAccount(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errResponse(err))
 		return
 	}
-
 	arg := db.CreateAccountParams{
 		Owner:    req.Owner,
 		Currency: req.Currency,
 		Balance:  0,
 	}
-
 	account, err := server.store.CreateAccount(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 		return
 	}
-
 	ctx.JSON(http.StatusOK, account)
 }
 
@@ -54,7 +51,6 @@ func (server *Server) GetAccount(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 		return
 	}
-
 	ctx.JSON(http.StatusOK, account)
 }
 
@@ -70,28 +66,23 @@ type listAccountsRequest struct {
 func (server *Server) ListAccounts(ctx *gin.Context) {
 	var queryParams listAccountsQueryParams
 	var req listAccountsRequest
-
 	if err := ctx.ShouldBindQuery(&queryParams); err != nil {
 		ctx.JSON(http.StatusBadRequest, errResponse(err))
 		return
 	}
-
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errResponse(err))
 		return
 	}
-
 	arg := db.ListAccountsParams{
 		Owner:  req.Owner,
 		Limit:  queryParams.PageSize,
 		Offset: (queryParams.PageID - 1) * queryParams.PageSize,
 	}
-
 	accounts, err := server.store.ListAccounts(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 		return
 	}
-
 	ctx.JSON(http.StatusOK, accounts)
 }

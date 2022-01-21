@@ -7,8 +7,7 @@ import (
 )
 
 var (
-	alphabet   = "abcdefghijklmnopqrstuvwxyz"
-	currencies = []string{"GBP", "EUR", "USD", "CAD", "AUD"}
+	alphabet = "abcdefghijklmnopqrstuvwxyz"
 )
 
 func init() {
@@ -33,8 +32,8 @@ func RandomName() string {
 }
 
 func RandomCurrency() string {
-	n := rand.Intn(len(currencies))
-	return currencies[n]
+	n := rand.Intn(len(supportedCurrencies))
+	return supportedCurrencies[n]
 }
 
 func RandomMoney() int64 {
