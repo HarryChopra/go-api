@@ -13,7 +13,7 @@ import (
 var (
 	testQueries *Queries
 	testDB      *sql.DB
-	testStore   *Store
+	testStore   Store
 )
 
 // TestMain performs setup and tear down for the tests
@@ -27,9 +27,6 @@ func TestMain(m *testing.M) {
 	}
 	testQueries = New(testDB)
 
-	testStore = &Store{
-		Queries: testQueries,
-		db:      testDB,
-	}
+	testStore = NewStore(testDB)
 	os.Exit(m.Run())
 }
