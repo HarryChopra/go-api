@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	db "github.com/harrychopra/go-api/db/models"
+	"github.com/lib/pq"
 )
 
 type createAccountRequest struct {
@@ -26,6 +27,16 @@ func (server *Server) CreateAccount(ctx *gin.Context) {
 	}
 	account, err := server.store.CreateAccount(ctx, arg)
 	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			switch pqErr.Code.Name() {
+			// FK_Constraint: User for this account does not exist
+			case "foreign_key_violation",
+				// Unique Constraint: User for this account already has an account with this currency
+				"unique_violation":
+				ctx.JSON(http.StatusForbidden, errResponse(err))
+			}
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 		return
 	}

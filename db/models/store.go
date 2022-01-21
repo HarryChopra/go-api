@@ -11,11 +11,13 @@ type Store interface {
 	TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error)
 }
 
+// SQLStore provides required query and transaction methods
 type SQLStore struct {
 	*Queries
 	db *sql.DB
 }
 
+// NewStore returns a new Store object for data access
 func NewStore(db *sql.DB) Store {
 	return &SQLStore{
 		Queries: New(db),
@@ -65,12 +67,10 @@ func (store *SQLStore) TransferTx(ctx context.Context, arg TransferTxParams) (Tr
 
 	err := store.execTx(ctx, func(q *Queries) error {
 		var err error
-
 		// a. A transfer record
 		if result.Transfer, err = q.CreateTransfer(ctx, CreateTransferParams(arg)); err != nil {
 			return err
 		}
-
 		// b. Entry (from) record
 		if result.FromEntry, err = q.CreateEntry(ctx, CreateEntryParams{
 			AccountID: arg.FromAccountID,
@@ -78,7 +78,6 @@ func (store *SQLStore) TransferTx(ctx context.Context, arg TransferTxParams) (Tr
 		}); err != nil {
 			return err
 		}
-
 		// c. Entry (to) record
 		if result.ToEntry, err = q.CreateEntry(ctx, CreateEntryParams{
 			AccountID: arg.ToAccountID,
@@ -86,9 +85,8 @@ func (store *SQLStore) TransferTx(ctx context.Context, arg TransferTxParams) (Tr
 		}); err != nil {
 			return err
 		}
-
 		// d. & e. Account Balance update
-		// Before concurrent row updates, Order each row operation by ID to prevent deadlock
+		// Before concurrent row updates, process each row operation by ID to prevent deadlock
 		if arg.FromAccountID < arg.ToAccountID {
 			result.FromAccount, result.ToAccount, err = updateBalance(
 				ctx, q, arg.FromAccountID, -arg.Amount, arg.ToAccountID, arg.Amount)

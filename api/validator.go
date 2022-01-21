@@ -5,6 +5,7 @@ import (
 	"github.com/harrychopra/go-api/util"
 )
 
+// Custom currency validator
 var validCurrency validator.Func = func(fieldLevel validator.FieldLevel) bool {
 	if currency, ok := fieldLevel.Field().Interface().(string); ok {
 		return util.IsSupportedCurrency(currency)
