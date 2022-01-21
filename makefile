@@ -26,5 +26,8 @@ test:
 
 server:
 	go run main.go
+
+mock:
+	mockgen -package mock -destination db/mock/store.go github.com/harrychopra/go-api/db/models Store
 	
 PHONY: run postgres createdb dropdb migrateup migratedown sqlc test server mock
