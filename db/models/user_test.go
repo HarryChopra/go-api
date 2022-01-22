@@ -12,22 +12,24 @@ import (
 func createRandomUser(t *testing.T, arg *CreateUserParams) User {
 	if arg == nil {
 		arg = &CreateUserParams{
-			Username:       util.RandomName(),
-			HashedPassword: "secret",
-			FullName:       util.RandomName(),
-			Email:          util.RandomEmail(),
+			Username: util.RandomName(),
+			FullName: util.RandomName(),
+			Email:    util.RandomEmail(),
 		}
 	}
+	var err error
+	arg.HashedPassword, err = util.HashedPassword(util.RandomString(8))
+	require.NotEmpty(t, arg.HashedPassword)
+	require.NoError(t, err)
 	user, err := testQueries.CreateUser(context.Background(), *arg)
 	require.NoError(t, err)
 	return user
 }
 func TestCreateUser(t *testing.T) {
 	arg := &CreateUserParams{
-		Username:       util.RandomName(),
-		HashedPassword: "secret",
-		FullName:       util.RandomName(),
-		Email:          util.RandomEmail(),
+		Username: util.RandomName(),
+		FullName: util.RandomName(),
+		Email:    util.RandomEmail(),
 	}
 	user := createRandomUser(t, arg)
 	require.NotEmpty(t, user)
