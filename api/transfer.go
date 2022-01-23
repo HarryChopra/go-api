@@ -2,11 +2,13 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	db "github.com/harrychopra/go-api/db/models"
+	"github.com/harrychopra/go-api/token"
 )
 
 type createTransferRequest struct {
@@ -22,8 +24,17 @@ func (server *Server) CreateTransfer(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errResponse(err))
 		return
 	}
-	if !server.validAccount(ctx, req.FromAccountID, req.Currency) ||
-		!server.validAccount(ctx, req.ToAccountID, req.Currency) {
+	fromAccount, valid := server.validAccount(ctx, req.FromAccountID, req.Currency)
+	if !valid {
+		return
+	}
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if authPayload.Username != fromAccount.Owner {
+		err := errors.New("from account doesn't belong to authenticated user")
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, errResponse(err))
+		return
+	}
+	if _, valid = server.validAccount(ctx, req.ToAccountID, req.Currency); !valid {
 		return
 	}
 	arg := db.TransferTxParams{
@@ -40,20 +51,20 @@ func (server *Server) CreateTransfer(ctx *gin.Context) {
 }
 
 // validAccount confirms if the input account (id) exists and has a matching input currency
-func (server *Server) validAccount(ctx *gin.Context, accountID int64, currency string) bool {
+func (server *Server) validAccount(ctx *gin.Context, accountID int64, currency string) (db.Account, bool) {
 	account, err := server.store.GetAccount(ctx, accountID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errResponse(err))
-			return false
+			return account, false
 		}
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
-		return false
+		return account, false
 	}
 	if account.Currency != currency {
 		err := fmt.Errorf("account [%d] currency mismatch: %s vs %s", account.ID, account.Currency, currency)
 		ctx.JSON(http.StatusBadRequest, errResponse(err))
-		return false
+		return account, false
 	}
-	return true
+	return account, true
 }
