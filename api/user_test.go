@@ -90,12 +90,16 @@ func TestCreateUserAPI(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			store := mock.NewMockStore(ctrl)
+
 			testCase.buildStubs(store)
-			server := NewServer(store)
+
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 			url := "/users"
+
 			data, err := json.Marshal(testCase.body)
 			require.NoError(t, err)
+
 			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 			server.router.ServeHTTP(recorder, request)

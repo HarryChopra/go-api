@@ -89,16 +89,20 @@ func TestGetAccountAPI(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			store := mock.NewMockStore(ctrl)
+
 			// Build stubs for each test case
 			testCase.buildStubs(store)
+
 			// Start http server and send a test request
-			server := NewServer(store)
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 			url := fmt.Sprintf("/accounts/%d", testCase.accountID)
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
+
 			// Send request to the server.router to serve
 			server.router.ServeHTTP(recorder, request)
+
 			// Verify the http response
 			testCase.checkResponse(t, recorder)
 		})

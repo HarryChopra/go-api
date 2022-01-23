@@ -3,9 +3,23 @@ package api
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	db "github.com/harrychopra/go-api/db/models"
+	"github.com/harrychopra/go-api/util"
+	"github.com/stretchr/testify/require"
 )
+
+func newTestServer(t *testing.T, store db.Store) *Server {
+	config := util.Config{
+		TokenSymmetricKey:     util.RandomString(32),
+		ACCESS_TOKEN_DURATION: time.Minute,
+	}
+	server, err := NewServer(config, store)
+	require.NoError(t, err)
+	return server
+}
 
 func TestMain(m *testing.M) {
 	// Cleaner test output
